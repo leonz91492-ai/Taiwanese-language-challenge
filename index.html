@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺語挑戰：阿媽佮簿仔</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #E0F2FE; /* Tailwind sky-100 作為底色 */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background-image 0.5s ease;
+        }
+
+        /* 網格設定：保持圖片原始比例，並讓版面更緊湊 */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4行 */
+            grid-template-rows: repeat(2, 1fr);    /* 2列 */
+            gap: 1.5rem; /* 增加間距，讓每個項目更獨立 */
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .grid-item {
+            background-color: #ffffff;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            transition: all 0.1s ease; /* 縮短動畫時間，讓節奏感更強 */
+            /* 預設隱藏邊框，靠亮起效果顯示 */
+            border: 6px solid transparent; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .grid-item img {
+            max-width: 100%;
+            height: auto;
+            max-height: 120px; /* 限制圖片高度，確保版面整齊 */
+            object-fit: contain;
+            border-radius: 0; 
+            margin-bottom: 0.5rem;
+        }
+
+        .grid-item p {
+            margin-top: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #1F2937; /* Tailwind gray-800 */
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .grid-item span {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4B5563; /* Tailwind gray-600 */
+        }
+
+        /* 亮起效果：模仿原影片的綠色粗框 */
+        .highlight-item {
+            border: 6px solid #4ADE80; /* Tailwind green-400 */
+            background-color: #DCFCE7; /* Tailwind green-50 */
+            transform: scale(1.05); /* 稍微放大 */
+            box-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
+        }
+
+        /* 按鈕特效 */
+        .btn-game {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            border: none;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-game:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .btn-game:active {
+            transform: translateY(1px);
+        }
+
+        /* 速度選擇按鈕特效 */
+        .btn-speed {
+            transition: all 0.2s;
+            border: 3px solid transparent;
+        }
+        .btn-speed:hover {
+            transform: translateY(-2px);
+        }
+        .btn-speed.active {
+            border-color: #EF4444; /* Red-500 */
+            background-color: #FEE2E2; /* Red-100 */
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        /* 暫停畫面疊層 */
+        #pause-overlay {
+            backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <!-- 歡迎與準備畫面 -->
+    <div id="welcome-screen" class="bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl text-center max-w-2xl w-full border border-gray-100 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-blue-400 via-sky-500 to-teal-400"></div>
+        <h1 class="text-6xl font-black mb-4 text-gray-800 drop-shadow-sm"><span class="text-sky-500">臺語挑戰</span><br>阿媽佮簿仔</h1>
+        <p class="text-2xl text-gray-600 mb-8 font-bold">準備好跟著節奏唸出繞口令了嗎？</p>
+
+        <!-- 速度設定區域 -->
+        <div class="mb-8 bg-gray-50 p-6 rounded-2xl border border-gray-200">
+            <h3 class="text-xl font-bold text-gray-700 mb-4">🎵 請選擇挑戰速度：</h3>
+            <div class="flex justify-center gap-4">
+                <button class="btn-speed bg-green-100 text-green-700 hover:bg-green-200 px-6 py-3 rounded-full font-black text-xl" data-speed="slow">慢速練習</button>
+                <button class="btn-speed active bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-6 py-3 rounded-full font-black text-xl" data-speed="normal">標準節奏</button>
+                <button class="btn-speed bg-red-100 text-red-700 hover:bg-red-200 px-6 py-3 rounded-full font-black text-xl" data-speed="fast">快速挑戰</button>
+            </div>
+            <p id="speed-desc" class="text-base font-bold text-gray-500 mt-4">標準節奏，請努力跟上音軌。</p>
+        </div>
+
+        <button id="start-btn" class="btn-game text-white text-3xl font-black py-4 px-12 rounded-full w-full">
+            開始挑戰！
+        </button>
+    </div>
+
+    <!-- 遊戲進行畫面 -->
+    <div id="game-screen" class="hidden w-full max-w-5xl mx-auto flex flex-col items-center">
+        <!-- 頂部資訊列 -->
+        <div class="w-full flex justify-between items-center bg-white/90 backdrop-blur shadow-md rounded-2xl p-4 mb-6 relative border-b-4 border-sky-300">
+            <div class="w-16 h-16 flex items-center justify-center bg-sky-100 rounded-full shadow-inner">
+                <span class="text-3xl">📣</span>
+            </div>
+            
+            <div class="text-center absolute left-1/2 transform -translate-x-1/2">
+                <h2 id="level-indicator" class="text-5xl font-black tracking-widest text-sky-800">1/5</h2>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- 暫停/繼續 按鈕 -->
+                <button id="pause-btn" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transition-colors flex items-center gap-2">
+                    <span id="pause-icon" class="text-xl">⏸️</span>
+                    <span id="pause-text" class="text-xl">暫停</span>
+                </button>
+                <div class="flex gap-2">
+                    <div class="w-12 h-12 flex items-center justify-center bg-red-100 text-red-500 rounded-full shadow text-2xl">⚡</div>
+                    <div class="w-12 h-12 flex items-center justify-center bg-yellow-100 text-yellow-500 rounded-full shadow text-2xl">💡</div>
+                    <div class="w-12 h-12 flex items-center justify-center bg-sky-100 text-sky-500 rounded-full shadow text-2xl">❗</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 網格挑戰區 -->
+        <div id="grid-container" class="grid-container relative bg-white/80 backdrop-blur-md p-8 rounded-3xl shadow-xl border border-white">
+            <!-- 格子將由 JS 動態生成 -->
+        </div>
+        
+        <!-- 倒數與提示疊層 (遊戲進行中) -->
+        <div id="countdown-overlay" class="hidden absolute inset-0 z-10 flex items-center justify-center bg-black/50 rounded-3xl backdrop-blur-sm">
+            <span class="text-7xl font-black text-white drop-shadow-2xl tracking-widest bg-sky-600/80 px-10 py-6 rounded-3xl border-4 border-white">準備跟上節奏！</span>
+        </div>
+
+        <!-- 暫停疊層 -->
+        <div id="pause-overlay" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 rounded-3xl backdrop-blur-sm">
+            <span class="text-7xl font-black text-white mb-8 drop-shadow-lg">⏸️ 挑戰已暫停</span>
+            <button id="resume-btn" class="bg-green-500 hover:bg-green-600 text-white text-4xl font-black py-5 px-16 rounded-full shadow-2xl transition-transform hover:scale-105 border-4 border-white">
+                ▶️ 繼續挑戰
+            </button>
+        </div>
+    </div>
+
+    <!-- 結束畫面 -->
+    <div id="end-screen" class="hidden bg-white/95 backdrop-blur-md p-12 rounded-3xl shadow-2xl text-center max-w-xl w-full border border-gray-100">
+        <div class="text-8xl mb-6">🎉</div>
+        <h2 class="text-5xl font-black mb-4 text-gray-800">挑戰成功！</h2>
+        <p class="text-2xl text-gray-600 mb-8 font-bold">阿媽佮簿仔，你唸得真好！</p>
+        <button id="restart-btn" class="bg-sky-500 hover:bg-sky-600 text-white text-2xl font-bold py-4 px-12 rounded-full w-full shadow-lg transition-transform hover:scale-105">
+            再來一次
+        </button>
+    </div>
+
+    <script>
+        // --- 圖片素材設定 ---
+        // 建議：您可以將這些網址替換成您上傳至 GitHub 資料夾內的相對路徑 (例如 './images/ama.png')
+        const ASSETS = {
+            ama: 'https://cdn-icons-png.flaticon.com/512/4333/4333041.png',   // 阿媽示意圖
+            phoo: 'https://cdn-icons-png.flaticon.com/512/3145/3145765.png',  // 簿仔示意圖
+            ham_a: 'https://cdn-icons-png.flaticon.com/512/2880/2880015.png', // 蛤蜊示意圖 (擴充用)
+            ap_a: 'https://cdn-icons-png.flaticon.com/512/2956/2956820.png'   // 盒子示意圖 (擴充用)
+        };
+
+        // --- 關卡設計 ---
+        // 根據簡報有 8 格，定義 5 個不同難度的陣列順序
+        const levelsData = [
+            { // 關卡 1：基礎版 (前四阿媽，後四簿仔)
+                items: [
+                    { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' },
+                    { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }
+                ],
+                sequence: [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            { // 關卡 2：交錯版
+                items: [
+                    { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' },
+                    { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }
+                ],
+                sequence: [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            { // 關卡 3：混合版 A
+                items: [
+                    { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' },
+                    { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }
+                ],
+                sequence: [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            { // 關卡 4：混合版 B
+                items: [
+                    { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' },
+                    { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }
+                ],
+                sequence: [0, 1, 2, 3, 4, 5, 6, 7]
+            },
+            { // 關卡 5：全亂序挑戰
+                items: [
+                    { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' },
+                    { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }, { type: 'phoo', text: '簿仔', pinyin: 'phōo-á' }, { type: 'ama', text: '阿媽', pinyin: 'a-má' }
+                ],
+                sequence: [0, 1, 2, 3, 4, 5, 6, 7]
+            }
+        ];
+
+        // --- 遊戲狀態管理 ---
+        let currentLevelIndex = 0;
+        let isPlaying = false;
+        let isPaused = false;
+        
+        // --- 音檔與節奏設定 ---
+        // 請確保您 GitHub 專案中，音檔名稱與此完全一致
+        const bgAudio = new Audio('music.m4a');
+        
+        // 基準節奏設定 (對應「中等」速度，單位：毫秒)
+        const BASE_BEAT_INTERVAL = 850; 
+        const BASE_INTRO_DELAY = 3200; 
+
+        let currentSpeedFactor = 1.0; 
+        let beatInterval = BASE_BEAT_INTERVAL; 
+        let introDelay = BASE_INTRO_DELAY;
+        
+        // 控制暫停邏輯的變數
+        let currentSequenceIndex = 0;
+        let resolveSequenceStep = null; 
+
+        // --- DOM 元素綁定 ---
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+        const gridContainer = document.getElementById('grid-container');
+        const levelIndicator = document.getElementById('level-indicator');
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const pauseOverlay = document.getElementById('pause-overlay');
+        const speedBtns = document.querySelectorAll('.btn-speed');
+        const speedDesc = document.getElementById('speed-desc');
+
+        // --- 事件監聽器 ---
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', resetGame);
+        pauseBtn.addEventListener('click', togglePause);
+        resumeBtn.addEventListener('click', togglePause);
+
+        // 速度選擇邏輯
+        speedBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                speedBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                setSpeed(e.target.getAttribute('data-speed'));
+            });
+        });
+
+        function setSpeed(type) {
+            if (type === 'slow') {
+                currentSpeedFactor = 0.8;
+                speedDesc.innerText = "慢速練習：適合剛開始接觸的同學，慢慢來比較快。";
+            } else if (type === 'normal') {
+                currentSpeedFactor = 1.0;
+                speedDesc.innerText = "標準節奏：維持原曲速度，請努力跟上音軌。";
+            } else if (type === 'fast') {
+                currentSpeedFactor = 1.25;
+                speedDesc.innerText = "快速挑戰：挑戰極限！適合已經很熟練的同學。";
+            }
+            
+            beatInterval = BASE_BEAT_INTERVAL / currentSpeedFactor;
+            introDelay = BASE_INTRO_DELAY / currentSpeedFactor;
+            bgAudio.playbackRate = currentSpeedFactor;
+        }
+
+        // --- 核心控制邏輯 ---
+        function startGame() {
+            const activeSpeedBtn = document.querySelector('.btn-speed.active');
+            if(activeSpeedBtn) setSpeed(activeSpeedBtn.getAttribute('data-speed'));
+
+            welcomeScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            currentLevelIndex = 0;
+            isPaused = false;
+            updatePauseUI();
+            loadLevel(currentLevelIndex);
+        }
+
+        function resetGame() {
+            bgAudio.pause();
+            bgAudio.currentTime = 0;
+            endScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            
+            currentLevelIndex = 0;
+            isPaused = false;
+            updatePauseUI();
+            loadLevel(currentLevelIndex);
+        }
+
+        function togglePause() {
+            if (!isPlaying) return;
+
+            isPaused = !isPaused;
+            updatePauseUI();
+
+            if (isPaused) {
+                bgAudio.pause();
+                pauseOverlay.classList.remove('hidden');
+            } else {
+                bgAudio.play().catch(e => console.log(e));
+                pauseOverlay.classList.add('hidden');
+                
+                // 喚醒 Promise
+                if (resolveSequenceStep) {
+                    let tempResolve = resolveSequenceStep;
+                    resolveSequenceStep = null; 
+                    tempResolve(); 
+                }
+            }
+        }
+
+        function updatePauseUI() {
+            const pauseIcon = document.getElementById('pause-icon');
+            const pauseText = document.getElementById('pause-text');
+            
+            if (isPaused) {
+                pauseIcon.innerText = '▶️';
+                pauseText.innerText = '繼續';
+                pauseBtn.classList.replace('bg-slate-700', 'bg-green-600');
+                pauseBtn.classList.replace('hover:bg-slate-800', 'hover:bg-green-700');
+            } else {
+                pauseIcon.innerText = '⏸️';
+                pauseText.innerText = '暫停';
+                pauseBtn.classList.replace('bg-green-600', 'bg-slate-700');
+                pauseBtn.classList.replace('hover:bg-green-700', 'hover:bg-slate-800');
+            }
+        }
+
+        function loadLevel(index) {
+            if (index >= levelsData.length) {
+                isPlaying = false;
+                gameScreen.classList.add('hidden');
+                endScreen.classList.remove('hidden');
+                return;
+            }
+
+            const level = levelsData[index];
+            levelIndicator.innerText = `${index + 1}/${levelsData.length}`;
+            gridContainer.innerHTML = ''; // 清空網格
+
+            // 動態生成 HTML 格子
+            level.items.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'grid-item';
+                div.id = `cell-${i}`;
+                
+                const img = document.createElement('img');
+                img.src = ASSETS[item.type];
+                img.alt = item.text;
+
+                const p = document.createElement('p');
+                p.innerText = item.text;
+                
+                const span = document.createElement('span');
+                span.innerText = item.pinyin;
+                p.appendChild(span);
+
+                div.appendChild(img);
+                div.appendChild(p);
+                gridContainer.appendChild(div);
+            });
+
+            startLevelSequence(level);
+        }
+
+        // 自訂支援暫停的 Promise 等待函數
+        async function pausableTimeout(ms) {
+            return new Promise(resolve => {
+                const step = async () => {
+                    if (isPaused) {
+                        resolveSequenceStep = resolve; 
+                    } else {
+                        setTimeout(() => {
+                            if(isPaused) {
+                                resolveSequenceStep = resolve;
+                            } else {
+                                resolve();
+                            }
+                        }, ms);
+                    }
+                };
+                step();
+            });
+        }
+
+        // 關卡節奏執行流程
+        async function startLevelSequence(level) {
+            isPlaying = true;
+            currentSequenceIndex = 0;
+            
+            countdownOverlay.classList.remove('hidden');
+            
+            // 初始化並播放音樂
+            bgAudio.currentTime = 0;
+            bgAudio.playbackRate = currentSpeedFactor; 
+            bgAudio.play().catch(e => console.log("等待使用者互動"));
+
+            // 等待前奏
+            await pausableTimeout(introDelay);
+            countdownOverlay.classList.add('hidden');
+
+            // 依序亮燈跑節拍
+            while (currentSequenceIndex < level.sequence.length) {
+                if (!isPlaying) break; 
+                
+                if (isPaused) {
+                    await new Promise(r => { resolveSequenceStep = r; });
+                }
+
+                const cellIndex = level.sequence[currentSequenceIndex];
+                const cell = document.getElementById(`cell-${cellIndex}`);
+                
+                if (cell) {
+                    cell.classList.add('highlight-item');
+                    setTimeout(() => {
+                        cell.classList.remove('highlight-item');
+                    }, beatInterval * 0.8);
+                }
+                
+                await pausableTimeout(beatInterval);
+                currentSequenceIndex++;
+            }
+
+            bgAudio.pause();
+
+            // 換關緩衝
+            if(isPlaying) {
+                await pausableTimeout(1000);
+                currentLevelIndex++;
+                loadLevel(currentLevelIndex);
+            }
+        }
+    </script>
+</body>
+</html>
