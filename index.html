@@ -477,7 +477,10 @@
             if(isPlaying) {
                 await pausableTimeout(1000);
                 currentLevelIndex++;
-                loadLevel(currentLevelIndex);
+                // 確定畫面上載入下一關成功後，直接跑下一關的挑戰節奏
+                if (loadLevelUI(currentLevelIndex)) {
+                    startLevelSequence(levelsData[currentLevelIndex]);
+                }
             }
         }
     </script>
